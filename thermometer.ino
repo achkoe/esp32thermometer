@@ -32,9 +32,8 @@ PubSubClient client(espClient);
 #define WIFI_TIMEOUT 10000          // Timeout for WiFi
 #define MQTT_TIMEOUT 10000          // Timeout for MQTT
 #define uS_TO_S_FACTOR 1000000ULL   // Conversion factor for micro seconds to seconds 
-#define TIME_TO_SLEEP  60          // Time span for ESP32 to sleep (in seconds) 
-#define ENABLE_DEEP_SLEEP D6       // Pull pin to low to disable deep sleep
-
+#define TIME_TO_SLEEP  60           // Time span for ESP32 to sleep (in seconds) 
+#define ENABLE_DEEP_SLEEP D6        // Pull pin to low to disable deep sleep
 
 /*
 Send ESP32 to deep sleep if deep_sleep_enabled is true.
