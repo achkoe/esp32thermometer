@@ -1,0 +1,10 @@
+profiles:
+  thermometer:
+    fqbn: esp32:esp32:XIAO_ESP32C6
+    port: /dev/ttyACM0
+    libraries:
+      - Adafruit AHT10 (0.1.0)
+      - Adafruit BusIO (1.17.4)
+      - Adafruit Unified Sensor (1.1.15)
+      - PubSubClient (2.8)
+
