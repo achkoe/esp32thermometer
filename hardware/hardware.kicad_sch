@@ -1744,6 +1744,16 @@
 	)
 	(wire
 		(pts
+			(xy 166.37 46.99) (xy 161.29 46.99)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0c7d72ec-23cd-4e64-8078-22f959749c18")
+	)
+	(wire
+		(pts
 			(xy 96.52 43.18) (xy 96.52 80.01)
 		)
 		(stroke
@@ -1764,6 +1774,16 @@
 	)
 	(wire
 		(pts
+			(xy 168.91 50.8) (xy 161.29 50.8)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "30f8c78c-f331-4a31-86ab-c6018ec14131")
+	)
+	(wire
+		(pts
 			(xy 82.55 62.23) (xy 118.11 62.23)
 		)
 		(stroke
@@ -1771,16 +1791,6 @@
 			(type default)
 		)
 		(uuid "3655efe3-b319-4054-b501-771be0618af7")
-	)
-	(wire
-		(pts
-			(xy 153.67 20.32) (xy 153.67 24.13)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "3728c33c-30b2-4a96-bcfd-9f92c7e01598")
 	)
 	(wire
 		(pts
@@ -1884,6 +1894,16 @@
 	)
 	(wire
 		(pts
+			(xy 166.37 53.34) (xy 166.37 46.99)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "904b9c34-e85a-4d55-80cf-b0a886c22a37")
+	)
+	(wire
+		(pts
 			(xy 78.74 66.04) (xy 78.74 85.09)
 		)
 		(stroke
@@ -1982,6 +2002,16 @@
 		)
 		(uuid "f01cf589-b9fe-4f13-8bff-ca79dc25da10")
 	)
+	(wire
+		(pts
+			(xy 168.91 20.32) (xy 168.91 50.8)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f7ad87ff-1ff5-4c7b-95a8-402dc7588b6c")
+	)
 	(symbol
 		(lib_id "Device:Battery_Cell")
 		(at 137.16 91.44 0)
@@ -2009,7 +2039,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Battery:BatteryHolder_Eagle_12BH611-GR"
 			(at 137.16 89.916 90)
 			(effects
 				(font
@@ -2139,6 +2169,72 @@
 			(project "hardware"
 				(path "/8dcf0a31-55ba-4cc5-8f16-9b4286a4d2c2"
 					(reference "#PWR05")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 166.37 53.34 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "43d27f28-103c-4fd4-8387-166b3f03482d")
+		(property "Reference" "#PWR08"
+			(at 166.37 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 166.37 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 166.37 53.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 166.37 53.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 166.37 53.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "15dd20d5-fcd0-47d7-9b64-6abbf3ad4805")
+		)
+		(instances
+			(project "hardware"
+				(path "/8dcf0a31-55ba-4cc5-8f16-9b4286a4d2c2"
+					(reference "#PWR08")
 					(unit 1)
 				)
 			)
@@ -2279,7 +2375,7 @@
 	)
 	(symbol
 		(lib_id "power:+3.3V")
-		(at 153.67 20.32 0)
+		(at 168.91 20.32 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2288,7 +2384,7 @@
 		(fields_autoplaced yes)
 		(uuid "71ce453a-46ce-4aa1-a87d-d248602fb733")
 		(property "Reference" "#PWR07"
-			(at 153.67 24.13 0)
+			(at 168.91 24.13 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2297,7 +2393,7 @@
 			)
 		)
 		(property "Value" "+3.3V"
-			(at 153.67 15.24 0)
+			(at 168.91 15.24 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2305,7 +2401,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 153.67 20.32 0)
+			(at 168.91 20.32 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2314,7 +2410,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 153.67 20.32 0)
+			(at 168.91 20.32 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2323,7 +2419,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
-			(at 153.67 20.32 0)
+			(at 168.91 20.32 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2371,7 +2467,7 @@
 				(hide yes)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_1x04_P2.54mm_Horizontal"
 			(at 53.34 30.48 0)
 			(effects
 				(font
@@ -2579,7 +2675,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_THT:R_Axial_DIN0411_L9.9mm_D3.6mm_P20.32mm_Horizontal"
 			(at 94.742 91.44 90)
 			(effects
 				(font
@@ -2764,7 +2860,7 @@
 		(fields_autoplaced yes)
 		(uuid "deefa31d-60ce-45d9-aabf-a884d1a3eb14")
 		(property "Reference" "JP1"
-			(at 80.01 88.8999 90)
+			(at 80.01 90.1699 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2782,7 +2878,7 @@
 				(hide yes)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Jumper:Jumper_Harwin_S1621_P10.9mm"
 			(at 78.74 90.17 0)
 			(effects
 				(font
@@ -2850,7 +2946,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_THT:R_Axial_DIN0411_L9.9mm_D3.6mm_P20.32mm_Horizontal"
 			(at 106.68 78.232 90)
 			(effects
 				(font
@@ -2984,7 +3080,7 @@
 				(hide yes)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_1x04_P2.54mm_Horizontal"
 			(at 53.34 30.48 0)
 			(effects
 				(font

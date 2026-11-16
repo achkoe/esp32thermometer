@@ -11,6 +11,11 @@ const int mqtt_port     -> Port of MQTT server
 const char* ssid        -> SSID of Wifi net
 const char* password    -> Password for WiFi net
 */
+/*
+vbat = 1915
+real battery voltage = 3.91V
+ratio = 2.04
+*/
 #include "_secrets.h"
 
 
@@ -46,7 +51,7 @@ void deep_sleep(bool deep_sleep_enabled) {
 }
 
 /*
-Get temperature, humidity and batterie voltage.
+Get temperature, humidity and battery voltage.
 */
 void getData() {
     if (aht_ready) {
@@ -55,7 +60,8 @@ void getData() {
         temp.temperature = 0.0;
         humidity.relative_humidity = 0.0;
     }
-    vbat = analogReadMilliVolts(A0);
+    // voltage divider is 2:1, thos real voltage in milliVolt is 2 * measured voltage
+    vbat = analogReadMilliVolts(A0) << 1;
 }
 
 
@@ -103,6 +109,7 @@ void setup() {
 
     String addrbase;
     if (mqtt_connected) {
+        // send data over MQTT
         addrbase = mac_address + String("/aht/vbat");
         client.publish(addrbase.c_str(), String(vbat).c_str());
         addrbase = mac_address + String("/aht/millis");
