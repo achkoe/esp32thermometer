@@ -6,3 +6,9 @@ upload:
 
 u: upload
 c: compile
+
+label:
+	cd label && latexmk -xelatex -g label.tex && cd ..
+
+view:
+	xreader label/label.pdf &
