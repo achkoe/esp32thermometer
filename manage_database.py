@@ -13,18 +13,15 @@ import paho.mqtt.enums as enums
 import paho.mqtt.client as mqtt 
 
 
-def timestamp(datetimestr):
-    return datetime.datetime.fromisoformat(datetimestr).timestamp()
-
 # DB stuff
 DBNAME = "esp32thermometer.db"
 DBPATH = pathlib.Path().joinpath("/", "opt", "esp32thermometer", DBNAME)
 TABLE_NAME = "esp32thermometer"
 DBFIELDS = dict(
-    time=dict(db="REAL", cfn=timestamp), 
-    temperature=dict(db="REAL", cfn=float), 
-    humidity=dict(db="REAL", cfn=float), 
-    source=dict(db="TEXT", cfn=str)
+    time=dict(db="REAL"), 
+    temperature=dict(db="REAL"), 
+    humidity=dict(db="REAL"), 
+    source=dict(db="TEXT")
 )
 DBVALUES = ", ".join(f":{key}" for key in DBFIELDS)
 
@@ -34,87 +31,14 @@ logging.basicConfig(format="%(levelname)s:%(asctime)s:%(lineno)d:%(message)s", l
 LOGGER = logging.getLogger()
 
 # mqtt stuff
+SOURCE_MAP = {
+    "10:BD:A3:8F:7B:64": dict(location="garden")
+}
+[SOURCE_MAP[key].update(dict(tablename=f't{key.replace(":", "_")}')) for key in SOURCE_MAP]
 QOS = 0
-TOPIC = [(f"10:BD:A3:8F:7B:64/aht/{key}", QOS) for key in ("millis", "temperature", "humidity", "vbat")]
+TOPIC = [(f"{mac}/aht/{key}", QOS) for mac in SOURCE_MAP for key in ("millis", "temperature", "humidity", "vbat")]
 BROKER_ADDRESS = "127.0.0.1" 
 PORT = 1883 
-
-
-def _on_message(client, userdata, message): 
-    msg = str(message.payload.decode("utf-8")) 
-    key = message.topic.split("/")[-1]
-    
-    # LOGGER.critical(f"{key}: {msg}")
-    
-    if key == "battery_ok":
-        if msg != "1" and (userdata.last_email_send_date is None or time.time() - userdata.last_email_send_date > 24 * 60 * 60):
-            # send email if battery is low every 24 hours
-            email_subject = "Warning: weatherstation battery is low"
-            email_message = f"Please change weatherstation battery!\nmsg={msg!r}"
-            email(email_subject, email_message)
-            userdata.last_email_send_date = time.time()
-            LOGGER.critical(email_subject)
-        return
-        
-    if key == "time":
-        userdata.count += 1
-    LOGGER.info(f"message {userdata.count}/{LENGTH} received: {msg!r}, topic: {message.topic}") 
-    userdata.data[key].append(DBFIELDS[key]["cfn"](msg))
-    #
-    if all([len(item) >= LENGTH for item in userdata.data.values()]):
-        for key in userdata.data:
-            if key == "time":
-                userdata.data["time"] = userdata.data["time"][-1]
-                # find the time 1 day before
-                twentyfour_before = userdata.data["time"] - 24 * 60 * 60
-                userdata.cursor.execute(f"SELECT rain_mm FROM weather WHERE time <= ? ORDER BY time DESC LIMIT 1", (twentyfour_before, ))
-                userdata.rain_mm_reference = cursor.fetchone()[0]
-                LOGGER.info(f"rain reference -> {userdata.rain_mm_reference}")
-            else:
-                userdata.data[key] = sum(userdata.data[key][:LENGTH]) / LENGTH
-                if key == "rain_mm" and userdata.rain_mm_reference is not None:
-                    rain_per_day_mm = userdata.data[key] - userdata.rain_mm_reference
-                    LOGGER.info(f"rain per day -> {rain_per_day_mm}")
-                    userdata.cursor.execute("UPDATE rain_per_day SET rain_per_day_mm = ? WHERE idx = 0", (rain_per_day_mm, ))
-        LOGGER.critical(f"db <- {userdata.data}")
-        userdata.cursor.execute(f"INSERT OR IGNORE INTO weather VALUES ({DBVALUES})", userdata.data)
-        userdata.connection.commit()
-        for key in userdata.data:
-            userdata.data[key] = [] 
-        userdata.count = 0
-    
-    
-def _on_connect(client, userdata, flags, rc, properties): 
-    LOGGER.info(f"Connected to MQTT Broker {BROKER_ADDRESS}") 
-    client.subscribe(TOPIC) 
-    
-
-def old():    
-    # sqlite stuff
-    connection = sqlite3.connect(DBPATH, detect_types=sqlite3.PARSE_DECLTYPES)
-    cursor = connection.cursor()
-    s = ",".join(f"{key} {DBFIELDS[key]['db']}" for key in DBFIELDS)    
-    cursor.execute(f"CREATE TABLE IF NOT EXISTS weather ({s})")
-    s = ",".join(DBFIELDS)
-    # avoid writing duplicate items
-    cursor.execute(f"CREATE UNIQUE INDEX IF NOT EXISTS uniquedata ON weather ({s})")
-    # create trigger to delete items older than 1 year
-    cursor.execute("""CREATE TRIGGER IF NOT EXISTS deletelastyear AFTER INSERT ON weather
-                   BEGIN
-                   DELETE FROM weather WHERE (julianday('now') - julianday(time, 'unixepoch')) > 365;
-                   END
-                   """)
-    cursor.execute("CREATE TABLE IF NOT EXISTS rain_per_day (idx INT, rain_per_day_mm REAL)")
-    connection.commit()
-        
-    # set userdata for paho client
-    userdata = SimpleNamespace(cursor=cursor, connection=connection, data=dict((key, []) for key in DBFIELDS), rain_mm_reference=None, count=0, last_email_send_date=None)
-    # mqtt stuff
-    client = mqtt.Client(enums.CallbackAPIVersion(2), userdata=userdata) 
-    client.on_connect = on_connect 
-    client.on_message = on_message 
-    client.connect(BROKER_ADDRESS, PORT) 
-    client.loop_forever()
 
 
 def create_database():
@@ -123,26 +47,34 @@ def create_database():
     # sqlite stuff
     connection = sqlite3.connect(DBPATH, detect_types=sqlite3.PARSE_DECLTYPES)
     cursor = connection.cursor()
-    s = ",".join(f"{key} {DBFIELDS[key]['db']}" for key in DBFIELDS)    
-    cursor.execute(f"CREATE TABLE IF NOT EXISTS {TABLE_NAME} ({s})")
-    s = ",".join(DBFIELDS)
-    # avoid writing duplicate items
-    cursor.execute(f"CREATE UNIQUE INDEX IF NOT EXISTS uniquedata ON {TABLE_NAME} ({s})")
-    # create trigger to delete items older than 1 year
-    cursor.execute(f"""CREATE TRIGGER IF NOT EXISTS deletelastyear AFTER INSERT ON {TABLE_NAME}
-                   BEGIN
-                   DELETE FROM {TABLE_NAME} WHERE (julianday('now') - julianday(time, 'unixepoch')) > 365;
-                   END
-                   """)
+    for key in SOURCE_MAP:
+        tablename = SOURCE_MAP[key]["tablename"]
+        s = ",".join(f"{key} {DBFIELDS[key]['db']}" for key in DBFIELDS)    
+        cursor.execute(f"CREATE TABLE IF NOT EXISTS {tablename} ({s})")
+        s = ",".join(DBFIELDS)
+        # avoid writing duplicate items
+        cursor.execute(f"CREATE UNIQUE INDEX IF NOT EXISTS uniquedata ON {tablename} ({s})")
+        # create trigger to delete items older than 1 year
+        cursor.execute(f"""CREATE TRIGGER IF NOT EXISTS deletelastyear AFTER INSERT ON {tablename}
+                    BEGIN
+                    DELETE FROM {tablename} WHERE (julianday('now') - julianday(time, 'unixepoch')) > 365;
+                    END
+                    """)
+        print(f"Database {DBPATH} created with table {tablename}")
     connection.commit()
 
 
-def read_database():
+def read_database(args):
+    tablenames = [SOURCE_MAP[key]["tablename"] for key in (SOURCE_MAP if args.source is None else (args.source, ))]
+    limit = f"LIMIT {args.number_to_read}" if args.number_to_read is not None else ""
     connection=sqlite3.connect(DBPATH, detect_types=sqlite3.PARSE_DECLTYPES)
+    connection.row_factory = sqlite3.Row
     cursor=connection.cursor()
-    cursor.execute(f"SELECT * FROM {TABLE_NAME} ORDER BY time DESC")
-    for item in cursor.fetchall():
-        print(item)
+    for tablename in tablenames:
+        cursor.execute(f"SELECT * FROM {tablename} ORDER BY time DESC {limit}")
+        for item in cursor.fetchall():
+            time = datetime.datetime.fromtimestamp(item["time"]).isoformat(sep='T', timespec='seconds')
+            print(f'{time} {item["temperature"]:5.1f}°C {item["humidity"]:5.1f}%')
 
 
 def write_database():
@@ -170,13 +102,14 @@ def on_message(client, userdata, message):
     source, _, key = message.topic.split("/")
     LOGGER.info(f"{t}: {source}|{key} -> {msg}")
 
+    tablename = SOURCE_MAP[source]["tablename"]
     data = userdata.payload.setdefault(source, dict())
     data[key] = msg
     if data.get("temperature", None) is not None and data.get("humidity", None) is not None:
         data["time"] = time.time()
         data["source"] = source
         LOGGER.info(f"db <- time: {data['time']}, temperature: {data['temperature']}, humidity: {data['humidity']}: source: {source}")
-        userdata.cursor.execute(f"INSERT OR IGNORE INTO {TABLE_NAME} VALUES ({DBVALUES})", data)
+        userdata.cursor.execute(f"INSERT OR IGNORE INTO {tablename} VALUES ({DBVALUES})", data)
         userdata.connection.commit()
         userdata.payload[source] = dict()
 
@@ -187,10 +120,14 @@ if __name__ == "__main__":
     group.add_argument("--create", action="store_true", help="create database")
     group.add_argument("--read", action="store_true", help="read database")
     group.add_argument("--write", action="store_true", help="write to database (use in service)")
+    parser.add_argument("--number", "-n", type=int, dest="number_to_read", default=None, help="number of items to read from database")
+    parser.add_argument("--source", "-s", choices=list(SOURCE_MAP.keys()), help="which source to show, default all")
     args = parser.parse_args()
     if args.create is True:
         create_database()
     elif args.read is True:
-        read_database()
+        read_database(args)
     elif args.write is True:
         write_database()
+    else:
+        print(args)
