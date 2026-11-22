@@ -65,12 +65,15 @@ def create_database():
 
 
 def read_database(args):
-    tablenames = [SOURCE_MAP[key]["tablename"] for key in (SOURCE_MAP if args.source is None else (args.source, ))]
+    sources = tuple(SOURCE_MAP.keys()) if args.source is None else (args.source, )
     limit = f"LIMIT {args.number_to_read}" if args.number_to_read is not None else ""
     connection=sqlite3.connect(DBPATH, detect_types=sqlite3.PARSE_DECLTYPES)
     connection.row_factory = sqlite3.Row
     cursor=connection.cursor()
-    for tablename in tablenames:
+    for source in sources:
+        tablename = SOURCE_MAP[source]["tablename"]
+        location = SOURCE_MAP[source]["location"]
+        print(f"---- {source} {location} ----")
         cursor.execute(f"SELECT * FROM {tablename} ORDER BY time DESC {limit}")
         for item in cursor.fetchall():
             time = datetime.datetime.fromtimestamp(item["time"]).isoformat(sep='T', timespec='seconds')
