@@ -1,0 +1,13 @@
+[Unit]
+Description=Read date from esp32thermometer
+After=mosquitto.service
+
+[Service]
+User=root
+WorkingDirectory=/home/pi/esp32thermometer
+ExecStart=/usr/bin/bash -c 'cd /home/pi/esp32thermometer/ && source /home/pi/.venv/bin/activate && python manage_database.py --write'
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

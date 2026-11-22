@@ -8,7 +8,7 @@ import time
 import sqlite3
 import pathlib
 from dotenv import dotenv_values
-#from sendemail import email
+from sendemail import email
 import paho.mqtt.enums as enums
 import paho.mqtt.client as mqtt 
 
@@ -83,7 +83,8 @@ def write_database():
     client = mqtt.Client(enums.CallbackAPIVersion(2), userdata=SimpleNamespace(
         payload=dict(),
         connection=connection,
-        cursor=cursor
+        cursor=cursor,
+        last_email_send_date=None
     )) 
     client.on_connect = on_connect 
     client.on_message = on_message 
@@ -101,6 +102,17 @@ def on_message(client, userdata, message):
     msg = str(message.payload.decode("utf-8")) 
     source, _, key = message.topic.split("/")
     LOGGER.info(f"{t}: {source}|{key} -> {msg}")
+
+    if key == "vbat":
+        msg = float(msg)
+        if msg < 3.5 and (userdata.last_email_send_date is None or time.time() - userdata.last_email_send_date > 24 * 60 * 60):
+            # send email if battery is low every 24 hours
+            email_subject = f"Warning: esp32thermometer {source!r} battery is low"
+            email_message = f"Please charge esp32thermometer battery!\n{key}={msg!r}\nmac={source}"
+            email(email_subject, email_message)
+            userdata.last_email_send_date = time.time()
+            LOGGER.critical(email_subject)
+        return
 
     tablename = SOURCE_MAP[source]["tablename"]
     data = userdata.payload.setdefault(source, dict())
